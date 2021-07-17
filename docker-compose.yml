@@ -1,0 +1,60 @@
+###############################################################################
+#                          Generated on phpdocker.io                          #
+###############################################################################
+version: "3.1"
+services:
+  mysql:
+    image: mysql:latest
+    container_name: rewriteng-mysql
+    working_dir: /application
+    volumes:
+      - .:/application
+      - ./storage:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=rewriteng
+      - MYSQL_USER=laravel
+      - MYSQL_PASSWORD=123456
+    ports:
+      - "8083:3306"
+  webserver:
+    image: nginx:alpine
+    container_name: rewriteng-webserver
+    working_dir: /application
+    volumes:
+      - .:/application
+      - ./phpdocker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "8081:80"
+    depends_on:
+      - php-fpm
+  php-fpm:
+    build: phpdocker/php-fpm
+    container_name: rewriteng-php-fpm
+    working_dir: /application
+    volumes:
+      - ./ngback:/application
+      - ./phpdocker/php-fpm/php-ini-overrides.ini:/etc/php/7.4/fpm/conf.d/99-overrides.ini
+    links:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_DATABASE: rewriteng
+      DB_USERNAME: laravel
+      DB_PASSWORD: 123456
+  #Scheduler
+  scheduler:
+    build: docker-cron
+    command: ./run-scheduler.sh
+    container_name: scheduler_laravel_api
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+#Network
+networks:
+  app-network:
+    driver: bridge
