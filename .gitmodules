@@ -1,0 +1,6 @@
+[submodule "Frontend"]
+	path = Frontend
+	url = git@github.com:rewriteNG/Frontend.git
+[submodule "Backend"]
+	path = Backend
+	url = git@github.com:rewriteNG/Backend.git
